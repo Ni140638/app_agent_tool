@@ -1,7 +1,7 @@
 import streamlit as st
 import openai
 
-openai.api_key="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"
+openai.api_key="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"
 
 # กำหนดชื่อแท็บ
 tabs = st.tabs(["💵 Assest Allocation", "🚗 Motorinsurance", "💳 Credit card"])
