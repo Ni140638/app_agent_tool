@@ -3,12 +3,7 @@ import openai
 
 import os
 
-openai.api_key = st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY"))
-
-#st.secrets["OPENAI_API_KEY"]
-
-# กำหนดชื่อแท็บ
-tabs = st.tabs(["💵 Assest Allocation", "🚗 Motorinsurance", "💳 Credit card"])
+openai.api_key = OPENAI_API_KEY ="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"
 
 # เก็บ state แยกสำหรับแต่ละบอท
 if "messages_bot1" not in st.session_state:
