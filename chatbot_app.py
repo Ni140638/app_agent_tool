@@ -1,7 +1,7 @@
 import streamlit as st
 import openai
 
-openai.api_key = "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"
+openai.api_key = "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"
 import streamlit as st
 import openai
 
