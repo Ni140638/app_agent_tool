@@ -1,7 +1,7 @@
 import streamlit as st
 import openai
 
-openai.api_key = "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"
+openai.api_key = "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"
 import openai
 
 # สร้างแท็บ
