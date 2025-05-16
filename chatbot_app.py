@@ -80,4 +80,64 @@ def run_bot(tab_title, subheader_text, bot_index, preset_buttons, system_prompt)
                     label_visibility="collapsed",
                     placeholder="พิมพ์คำถาม..."
                 )
-            with col
+            with cols[1]:
+                submitted = st.form_submit_button("➤")
+
+        if submitted and user_input:
+            prompt = user_input.strip()
+            if prompt == "เปลี่ยนหัวข้อ":
+                st.session_state[f"input_bot{bot_index}"] = ""
+                st.session_state[f"messages_bot{bot_index}"] = []
+                st.session_state[f"input{bot_index}"] = ""
+                st.session_state["selected_topic"] = None
+                st.chat_message("assistant").markdown("รับทราบค่ะ เปลี่ยนหัวข้อให้แล้วนะคะ ✨")
+                st.rerun()
+            else:
+                st.session_state[f"messages_bot{bot_index}"].append({"role": "user", "content": prompt})
+                with st.chat_message("user"):
+                    st.markdown(prompt)
+                reply = ask_openai(st.session_state[f"messages_bot{bot_index}"], system_prompt)
+                st.chat_message("assistant").markdown(reply)
+                st.session_state[f"messages_bot{bot_index}"].append({"role": "assistant", "content": reply})
+                st.session_state[f"input_bot{bot_index}"] = ""
+                st.session_state[f"input{bot_index}"] = ""
+
+# STEP 3: เรียกฟังก์ชันตามหัวข้อที่เลือก
+if st.session_state["selected_topic"] == "asset":
+    run_bot(
+        tab_title="💵 Asset Allocation",
+        subheader_text="💵 Asset Allocation",
+        bot_index=1,
+        preset_buttons=[
+            "ลูกค้ามีเงินเย็นอยู่กี่บาท วางเป็นระยะเท่าไร",
+            "เงินเย็นของลูกค้าสามารถทำอย่างไรได้บ้างเพื่อให้ผลกำไรงอกเงย",
+            "ผลิตภัณฑ์ Portfolio และ Matual Fund ที่แนะนำคืออะไร"
+        ],
+        system_prompt=prompt_mf
+    )
+
+elif st.session_state["selected_topic"] == "motor":
+    run_bot(
+        tab_title="🚗 Motor Insurance",
+        subheader_text="🚗 Motor Insurance",
+        bot_index=2,
+        preset_buttons=[
+            "ข้อมูลรถ(ปี/model/ยี่ห้อ)",
+            "VMI ที่เหมาะกับลูกค้าคืออะไร",
+            "ช่องทางที่ลูกค้าจ่ายได้"
+        ],
+        system_prompt=prompt_motor
+    )
+
+elif st.session_state["selected_topic"] == "credit":
+    run_bot(
+        tab_title="💳 Credit Card",
+        subheader_text="💳 Credit Card",
+        bot_index=3,
+        preset_buttons=[
+            "ลูกค้าถือบัตรประเภทไหน status ของบัตรเป็นอย่างไร",
+            "ลูกค้ามี Lifestyle เป็นอย่างไร",
+            "Promotion/Privilage ที่เหมาะกับลูกค้า"
+        ],
+        system_prompt=prompt_credit
+    )
