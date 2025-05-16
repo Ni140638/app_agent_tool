@@ -1,7 +1,7 @@
 import streamlit as st
 import openai
 
-openai.api_key = "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"
+openai.api_key =st.secrets["OPENAI_API_KEY"]
 import openai
 
 # สร้างแท็บ
