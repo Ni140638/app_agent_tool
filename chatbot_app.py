@@ -148,7 +148,7 @@ elif st.session_state["selected_topic"] == "motor":
                 st.session_state["messages_bot2"].append({"role": "user", "content": prompt})
                 with st.chat_message("user"):
                     st.markdown(prompt)
-                reply = ask_openai(st.session_state["messages_bot1"], prompt_motor)
+                reply = ask_openai(st.session_state["messages_bot2"], prompt_motor)
                 #reply = ask_openai(st.session_state["messages_bot2"], "ผู้เชี่ยวชาญด้านประกันรถยนต์ และเป็นนักขายประกันชั้นยอด")
                 st.chat_message("assistant").markdown(reply)
                 st.session_state["messages_bot2"].append({"role": "assistant", "content": reply})
