@@ -2,145 +2,118 @@ import streamlit as st
 import openai
 
 openai.api_key = st.secrets["OPENAI_API_KEY"]
-# สร้างแท็บ
+
+# -------------------------------
+# เตรียม state
+# -------------------------------
 tabs = st.tabs(["💵 Asset Allocation", "🚗 Motor Insurance", "💳 Credit Card"])
 
-# เตรียม state สำหรับข้อความแชท และข้อความ input
 for i in range(1, 4):
-    if f"messages_bot{i}" not in st.session_state:
-        st.session_state[f"messages_bot{i}"] = []
-    if f"input_bot{i}" not in st.session_state:
-        st.session_state[f"input_bot{i}"] = ""
+    st.session_state.setdefault(f"messages_bot{i}", [])
+    st.session_state.setdefault(f"input{i}", "")
 
+# -------------------------------
+# โหลด system prompt
+# -------------------------------
+with open("genai-mf-prompt-for-first-draft.txt", "r", encoding="utf-8") as f:
+    prompt_mf = f.read()
+with open("gen-ai-motor-first-draft.txt", "r", encoding="utf-8") as f:
+    prompt_motor = f.read()
+prompt_credit = "คุณคือเลขาส่วนตัวที่ช่วยสรุปงานและแนะนำการใช้บัตรเครดิตอย่างชาญฉลาด"
+
+# -------------------------------
 # ฟังก์ชันเรียก OpenAI
-def ask_openai(messages, system_prompt):
-    full_messages = [{"role": "system", "content": system_prompt}] + messages
-    response = openai.ChatCompletion.create(
-        model="gpt-4o",
-        messages=full_messages
-    )
-    return response.choices[0].message["content"]
+# -------------------------------
+def ask_openai(messages, system_prompt, max_history=10):
+    full_messages = [{"role": "system", "content": system_prompt}] + messages[-max_history:]
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=full_messages
+        )
+        return response.choices[0].message["content"]
+    except Exception as e:
+        return f"เกิดข้อผิดพลาด: {e}"
 
-# 💵 Tab 1 – Asset Allocation
-with open("genai-mf-prompt-for-first-draft.txt", "r", encoding="utf-8") as file:
-    prompt_mf = file.read()
+# -------------------------------
+# ฟังก์ชันแสดงบอทในแต่ละแท็บ
+# -------------------------------
+def chat_tab(tab, bot_index, preset_buttons, system_prompt):
+    with tab:
+        st.subheader(preset_buttons["title"])
 
-with open("gen-ai-motor-first-draft.txt", "r", encoding="utf-8") as file:
-    prompt_motor = file.read()
+        # ปุ่ม preset
+        col1, col2, col3 = st.columns(3)
+        for i, (col, text) in enumerate(preset_buttons["items"]):
+            if col.button(f"📌 {text}", key=f"btn{bot_index}_{i}"):
+                st.session_state[f"input{bot_index}"] = text
 
+        # แสดงประวัติการสนทนา
+        for msg in st.session_state[f"messages_bot{bot_index}"]:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
 
-with tabs[0]:
-    st.subheader("💵 Asset Allocation")
-
-    col1, col2, col3 = st.columns(3)
-    if col1.button("📌 ลูกค้ามีเงินเย็นอยู่กี่บาท วางเป็นระยะเท่าไร", key="btn1a"):
-        st.session_state["input_bot1"] = "ลูกค้ามีเงินเย็นอยู่กี่บาท วางเป็นระยะเท่าไร"
-    if col2.button("📌 เงินเย็นของลูกค้าสามารถทำอย่างไรได้บ้างเพื่อให้ผลกำไรงอกเงย", key="btn1b"):
-        st.session_state["input_bot1"] = "เงินเย็นของลูกค้าสามารถทำอย่างไรได้บ้างเพื่อให้ผลกำไรงอกเงย"
-    if col3.button("📌 ผลิตภัณฑ์ Portfolio และ Matual Fund ที่แนะนำคืออะไร", key="btn1c"):
-        st.session_state["input_bot1"] = "ผลิตภัณฑ์ Portfolio และ Matual Fund ที่แนะนำคืออะไร"
-
-    for msg in st.session_state["messages_bot1"]:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
-
-    with st.form(key="form1"):
+        # ช่องพิมพ์ + ปุ่มส่ง
         cols = st.columns([10, 1])
         with cols[0]:
-            st.session_state["input_bot1"] = st.text_input(
+            user_input = st.text_input(
                 "พิมพ์คำถาม...",
-                value=st.session_state["input_bot1"],
-                key="input1",
+                key=f"input{bot_index}",
                 label_visibility="collapsed",
                 placeholder="พิมพ์คำถาม..."
             )
         with cols[1]:
-            submitted = st.form_submit_button("➤")
+            send_clicked = st.button("➤", key=f"send_btn{bot_index}")
 
-    if submitted and st.session_state["input_bot1"]:
-        prompt = st.session_state["input_bot1"]
-        st.session_state["messages_bot1"].append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        reply = ask_openai(st.session_state["messages_bot1"], prompt_mf)
-        st.chat_message("assistant").markdown(reply)
-        st.session_state["messages_bot1"].append({"role": "assistant", "content": reply})
-        st.session_state["input_bot1"] = ""
+        # เมื่อคลิกส่ง
+        if send_clicked and user_input.strip():
+            prompt = user_input.strip()
+            st.session_state[f"messages_bot{bot_index}"].append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
+            reply = ask_openai(st.session_state[f"messages_bot{bot_index}"], system_prompt)
+            st.chat_message("assistant").markdown(reply)
+            st.session_state[f"messages_bot{bot_index}"].append({"role": "assistant", "content": reply})
+            st.session_state[f"input{bot_index}"] = ""  # ล้างช่องหลังส่ง
 
-# 🚗 Tab 2 – Motor Insurance
-with tabs[1]:
-    st.subheader("🚗 Motor Insurance")
+# -------------------------------
+# เรียกแต่ละแท็บ
+# -------------------------------
+chat_tab(
+    tabs[0], 1,
+    preset_buttons={
+        "title": "💵 Asset Allocation",
+        "items": [
+            ("ลูกค้ามีเงินเย็นอยู่กี่บาท วางเป็นระยะเท่าไร"),
+            ("เงินเย็นของลูกค้าสามารถทำอย่างไรได้บ้างเพื่อให้ผลกำไรงอกเงย"),
+            ("ผลิตภัณฑ์ Portfolio และ Matual Fund ที่แนะนำคืออะไร")
+        ]
+    },
+    system_prompt=prompt_mf
+)
 
-    col1, col2, col3 = st.columns(3)
-    if col1.button("📌 ข้อมูลรถ(ปี/model/ยี่ห้อ)", key="btn2a"):
-        st.session_state["input_bot2"] = "ข้อมูลรถ(ปี/model/ยี่ห้อ)"
-    if col2.button("📌 VMI ที่เหมาะกับลูกค้าคือะไร", key="btn2b"):
-        st.session_state["input_bot2"] = "VMI ที่เหมาะกับลูกค้าคือะไร"
-    if col3.button("📌 ช่องทางที่ลูกค้าจ่ายได้", key="btn2c"):
-        st.session_state["input_bot2"] = "ช่องทางที่ลูกค้าจ่ายได้"
+chat_tab(
+    tabs[1], 2,
+    preset_buttons={
+        "title": "🚗 Motor Insurance",
+        "items": [
+            ("ข้อมูลรถ(ปี/model/ยี่ห้อ)"),
+            ("VMI ที่เหมาะกับลูกค้าคืออะไร"),
+            ("ช่องทางที่ลูกค้าจ่ายได้")
+        ]
+    },
+    system_prompt=prompt_motor
+)
 
-    for msg in st.session_state["messages_bot2"]:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
-
-    with st.form(key="form2"):
-        cols = st.columns([10, 1])
-        with cols[0]:
-            st.session_state["input_bot2"] = st.text_input(
-                "ถามคำถาม...",
-                value=st.session_state["input_bot2"],
-                key="input2",
-                label_visibility="collapsed",
-                placeholder="ถามคำถาม..."
-            )
-        with cols[1]:
-            submitted = st.form_submit_button("➤")
-
-    if submitted and st.session_state["input_bot2"]:
-        prompt = st.session_state["input_bot2"]
-        st.session_state["messages_bot2"].append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        reply = ask_openai(st.session_state["messages_bot2"], prompt_motor)
-        st.chat_message("assistant").markdown(reply)
-        st.session_state["messages_bot2"].append({"role": "assistant", "content": reply})
-        st.session_state["input_bot2"] = ""
-
-# 💳 Tab 3 – Credit Card
-with tabs[2]:
-    st.subheader("💳 Credit Card")
-
-    col1, col2, col3 = st.columns(3)
-    if col1.button("📌 ลูกค้าถือบัตรประเภทไหน status ของบัตรเป็นอย่างไร", key="btn3a"):
-        st.session_state["input_bot3"] = "ลูกค้าถือบัตรประเภทไหน status ของบัตรเป็นอย่างไร"
-    if col2.button("📌 ลูกค้ามี Lifestyle เป็นอย่างไร", key="btn3b"):
-        st.session_state["input_bot3"] = "ลูกค้ามี Lifestyle เป็นอย่างไร"
-    if col3.button("📌 Promotion/Privilage ที่เหมาะกับลูกค้า", key="btn3c"):
-        st.session_state["input_bot3"] = "Promotion/Privilage ที่เหมาะกับลูกค้า"
-
-    for msg in st.session_state["messages_bot3"]:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
-
-    with st.form(key="form3"):
-        cols = st.columns([10, 1])
-        with cols[0]:
-            st.session_state["input_bot3"] = st.text_input(
-                "ถามคำถาม...",
-                value=st.session_state["input_bot3"],
-                key="input3",
-                label_visibility="collapsed",
-                placeholder="ถามคำถาม..."
-            )
-        with cols[1]:
-            submitted = st.form_submit_button("➤")
-
-    if submitted and st.session_state["input_bot3"]:
-        prompt = st.session_state["input_bot3"]
-        st.session_state["messages_bot3"].append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        reply = ask_openai(st.session_state["messages_bot3"], "คุณคือเลขาส่วนตัวที่ช่วยสรุปงานและแนะนำการใช้บัตรเครดิตอย่างชาญฉลาด")
-        st.chat_message("assistant").markdown(reply)
-        st.session_state["messages_bot3"].append({"role": "assistant", "content": reply})
-        st.session_state["input_bot3"] = ""
+chat_tab(
+    tabs[2], 3,
+    preset_buttons={
+        "title": "💳 Credit Card",
+        "items": [
+            ("ลูกค้าถือบัตรประเภทไหน status ของบัตรเป็นอย่างไร"),
+            ("ลูกค้ามี Lifestyle เป็นอย่างไร"),
+            ("Promotion/Privilage ที่เหมาะกับลูกค้า")
+        ]
+    },
+    system_prompt=prompt_credit
+)
