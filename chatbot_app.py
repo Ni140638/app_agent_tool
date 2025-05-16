@@ -3,8 +3,9 @@ import openai
 
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-
+# -------------------------------
 # Inject custom CSS
+# -------------------------------
 st.markdown("""
     <style>
         .block-container {
@@ -22,6 +23,7 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
+
 # -------------------------------
 # เตรียม state
 # -------------------------------
@@ -32,7 +34,7 @@ if "input_topic" not in st.session_state:
 
 for i in range(1, 4):
     st.session_state.setdefault(f"messages_bot{i}", [])
-    st.session_state.setdefault(f"preset_input{i}", "")
+    st.session_state.setdefault(f"prefill_input_{i}", "")
 
 # -------------------------------
 # โหลด system prompt
@@ -58,7 +60,7 @@ def ask_openai(messages, system_prompt, max_history=10):
         return f"เกิดข้อผิดพลาด: {e}"
 
 # -------------------------------
-# STEP 1: เลือกหัวข้อหลักก่อน
+# STEP 1: เลือกหัวข้อหลัก
 # -------------------------------
 if st.session_state["selected_topic"] is None:
     st.chat_message("assistant").markdown(
@@ -66,7 +68,6 @@ if st.session_state["selected_topic"] is None:
         "กรุณาพิมพ์หัวข้อที่คุณสนใจ ได้แก่: `Asset Allocation`, `Motor Insurance`, หรือ `Credit card` หากต้องการเปลี่ยนหัวข้อให้พิมพ์ว่า `เปลี่ยนหัวข้อ` ค่ะ"
     )
 
-    # ปุ่มเลือกหัวข้อแบบ prefill
     col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("Asset Allocation"):
@@ -78,17 +79,12 @@ if st.session_state["selected_topic"] is None:
             st.rerun()
     with col3:
         if st.button("Credit card"):
-            st.session_state["input_topic"] = "Credit card"
+            st.session_state["input_topic"] = "Credit Card"
             st.rerun()
 
-    # ฟอร์มกรอกหัวข้อ
     with st.form(key="topic_form"):
-        input_topic = st.text_input(
-            "หัวข้อที่คุณต้องการพูดคุย...",
-            value=st.session_state["input_topic"]
-        )
+        input_topic = st.text_input("หัวข้อที่คุณต้องการพูดคุย...", value=st.session_state["input_topic"])
         submitted = st.form_submit_button("ส่ง")
-
         if submitted:
             topic = input_topic.strip().lower()
             topic_map = {
@@ -105,40 +101,42 @@ if st.session_state["selected_topic"] is None:
             else:
                 st.warning("กรุณาพิมพ์เฉพาะ asset allocation, motor insurance, หรือ credit card เท่านั้นนะคะ")
 
-
 # -------------------------------
-# STEP 2: แสดงแท็บตามหัวข้อ
+# STEP 2: แสดงแชทตามหัวข้อ
 # -------------------------------
 def chat_tab(title, bot_index, system_prompt, preset_buttons):
     tabs = st.tabs([title])
     with tabs[0]:
         st.subheader(title)
 
-        col1, col2, col3 = st.columns(3)
-        for i, (col, text) in enumerate(zip((col1, col2, col3), preset_buttons)):
-            if col.button(f"📌 {text}", key=f"btn{bot_index}_{i}"):
-                st.session_state[f"preset_input{bot_index}"] = text
-
+        # แสดงข้อความสนทนาก่อนหน้า
         for msg in st.session_state[f"messages_bot{bot_index}"]:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
 
+        # ปุ่ม preset → prefill
+        col1, col2, col3 = st.columns(3)
+        for i, (col, text) in enumerate(zip((col1, col2, col3), preset_buttons)):
+            if col.button(f"📌 {text}", key=f"btn{bot_index}_{i}"):
+                st.session_state[f"prefill_input_{bot_index}"] = text
+                st.rerun()
+
+        # กล่องแชท
         cols = st.columns([10, 1])
-        default_value = st.session_state.get(f"preset_input{bot_index}", "")
         with cols[0]:
             user_input = st.text_input(
                 "ถามคำถาม...",
-                value=default_value,
-                key=f"textinput{bot_index}",
+                value=st.session_state[f"prefill_input_{bot_index}"],
+                key=f"text_input_{bot_index}",
                 label_visibility="collapsed",
                 placeholder="ถามคำถาม..."
             )
         with cols[1]:
-            send_clicked = st.button("➤", key=f"send_btn{bot_index}")
+            send = st.button("➤", key=f"send_btn_{bot_index}")
 
-        if send_clicked and user_input.strip():
+        if send and user_input.strip():
             prompt = user_input.strip()
-            st.session_state[f"preset_input{bot_index}"] = ""
+            st.session_state[f"prefill_input_{bot_index}"] = ""
 
             if prompt == "เปลี่ยนหัวข้อ":
                 st.session_state[f"messages_bot{bot_index}"] = []
@@ -148,24 +146,27 @@ def chat_tab(title, bot_index, system_prompt, preset_buttons):
                 st.session_state[f"messages_bot{bot_index}"].append({"role": "user", "content": prompt})
                 with st.chat_message("user"):
                     st.markdown(prompt)
+
                 reply = ask_openai(st.session_state[f"messages_bot{bot_index}"], system_prompt)
                 st.chat_message("assistant").markdown(reply)
                 st.session_state[f"messages_bot{bot_index}"].append({"role": "assistant", "content": reply})
+                st.rerun()
 
+# -------------------------------
+# STEP 3: เปิดแชทตามหัวข้อ
+# -------------------------------
 if st.session_state["selected_topic"] == "asset":
     chat_tab("💵 Asset Allocation", 1, prompt_mf, [
         "ลูกค้ามีเงินเย็นอยู่กี่บาท วางเป็นระยะเท่าไร",
         "เงินเย็นของลูกค้าสามารถทำอย่างไรได้บ้างเพื่อให้ผลกำไรงอกเงย",
         "ผลิตภัณฑ์ Portfolio และ Matual Fund ที่แนะนำคืออะไร"
     ])
-
 elif st.session_state["selected_topic"] == "motor":
     chat_tab("🚗 Motor Insurance", 2, prompt_motor, [
         "ข้อมูลรถ(ปี/model/ยี่ห้อ)",
         "VMI ที่เหมาะกับลูกค้าคืออะไร",
         "ช่องทางที่ลูกค้าจ่ายได้"
     ])
-
 elif st.session_state["selected_topic"] == "credit":
     chat_tab("💳 Credit Card", 3, prompt_credit, [
         "ลูกค้าถือบัตรประเภทไหน status ของบัตรเป็นอย่างไร",
