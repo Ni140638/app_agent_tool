@@ -28,6 +28,9 @@ def ask_openai(messages, system_prompt):
 # -------------------------------
 # STEP 1: ให้บอทถามก่อนว่าผู้ใช้ต้องการคุยเรื่องอะไร
 # -------------------------------
+   
+
+
 if st.session_state["selected_topic"] is None:
     st.chat_message("assistant").markdown(
         "สวัสดีค่ะ 😊 คุณอยากสอบถามเรื่องอะไร?\n\n"
@@ -52,6 +55,13 @@ if st.session_state["selected_topic"] is None:
 # -------------------------------
 # STEP 2: แสดงแท็บตามหัวข้อที่เลือก
 # -------------------------------
+with open("genai-mf-prompt-for-first-draft.txt", "r", encoding="utf-8") as file:
+    prompt_mf = file.read()
+
+with open("gen-ai-motor-first-draft.txt", "r", encoding="utf-8") as file:
+    prompt_motor = file.read()
+
+
 if st.session_state["selected_topic"] == "asset":
     tabs = st.tabs(["\U0001F4B5 Asset Allocation"])
     with tabs[0]:
@@ -89,10 +99,10 @@ if st.session_state["selected_topic"] == "asset":
                 st.session_state["selected_topic"] = None
                 st.rerun()  # แทนที่ experimental_rerun()
             else:
-                st.session_state["messages_bot1"].append({"role": "user", "content": prompt})
+                st.session_state["messages_bot1"].append({"role": "user", "content": prompt_mf+''+prompt})
                 with st.chat_message("user"):
                     st.markdown(prompt)
-                reply = ask_openai(st.session_state["messages_bot1"], "คุณคือ AI ด้านการวางแผนการลงทุน")
+                reply = ask_openai(st.session_state["messages_bot1"], "ผู้เชี่ยวชาญด้านการลงทุนด้าน Mutual fund หรือกองทุน ให้แก่ลูกค้ากลุ่ม wealth ของธนาคาร")
                 st.chat_message("assistant").markdown(reply)
                 st.session_state["messages_bot1"].append({"role": "assistant", "content": reply})
                 st.session_state["input_bot1"] = ""
@@ -134,10 +144,10 @@ elif st.session_state["selected_topic"] == "motor":
                 st.session_state["selected_topic"] = None
                 st.rerun()  # แทนที่ experimental_rerun()
             else:
-                st.session_state["messages_bot2"].append({"role": "user", "content": prompt})
+                st.session_state["messages_bot2"].append({"role": "user", "content": prompt_motor+prompt})
                 with st.chat_message("user"):
                     st.markdown(prompt)
-                reply = ask_openai(st.session_state["messages_bot2"], "คุณคือผู้ให้คำแนะนำด้านประกันภัยรถยนต์")
+                reply = ask_openai(st.session_state["messages_bot2"], "ผู้เชี่ยวชาญด้านประกันรถยนต์ และเป็นนักขายประกันชั้นยอด")
                 st.chat_message("assistant").markdown(reply)
                 st.session_state["messages_bot2"].append({"role": "assistant", "content": reply})
                 st.session_state["input_bot2"] = ""
