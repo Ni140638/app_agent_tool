@@ -87,7 +87,7 @@ if st.session_state["selected_topic"] == "asset":
             if prompt == "เปลี่ยนหัวข้อ":
                 st.chat_message("assistant").markdown("รับทราบค่ะ เปลี่ยนหัวข้อให้แล้วนะคะ ✨")
                 st.session_state["selected_topic"] = None
-                st.experimental_rerun()
+                st.rerun()  # แทนที่ experimental_rerun()
             else:
                 st.session_state["messages_bot1"].append({"role": "user", "content": prompt})
                 with st.chat_message("user"):
@@ -132,7 +132,7 @@ elif st.session_state["selected_topic"] == "motor":
             if prompt == "เปลี่ยนหัวข้อ":
                 st.chat_message("assistant").markdown("เปลี่ยนหัวข้อให้แล้วค่ะ 😊")
                 st.session_state["selected_topic"] = None
-                st.experimental_rerun()
+                st.rerun()  # แทนที่ experimental_rerun()
             else:
                 st.session_state["messages_bot2"].append({"role": "user", "content": prompt})
                 with st.chat_message("user"):
@@ -177,7 +177,7 @@ elif st.session_state["selected_topic"] == "credit":
             if prompt == "เปลี่ยนหัวข้อ":
                 st.chat_message("assistant").markdown("เปลี่ยนหัวข้อเรียบร้อยค่ะ ยินดีให้บริการเรื่องอื่น ๆ ได้เสมอ 💁‍♀️")
                 st.session_state["selected_topic"] = None
-                st.experimental_rerun()
+                st.rerun()  # แทนที่ experimental_rerun()
             else:
                 st.session_state["messages_bot3"].append({"role": "user", "content": prompt})
                 with st.chat_message("user"):
