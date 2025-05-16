@@ -20,7 +20,7 @@ for i in range(1, 4):
 def ask_openai(messages, system_prompt):
     full_messages = [{"role": "system", "content": system_prompt}] + messages
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o",
         messages=full_messages
     )
     return response.choices[0].message["content"]
@@ -99,7 +99,7 @@ if st.session_state["selected_topic"] == "asset":
                 st.session_state["selected_topic"] = None
                 st.rerun()  # แทนที่ experimental_rerun()
             else:
-                st.session_state["messages_bot1"].append({"role": "user", "content": prompt_mf+''+prompt})
+                st.session_state["messages_bot1"].append({"role": "user", "content": prompt_mf+prompt})
                 with st.chat_message("user"):
                     st.markdown(prompt)
                 reply = ask_openai(st.session_state["messages_bot1"], "ผู้เชี่ยวชาญด้านการลงทุนด้าน Mutual fund หรือกองทุน ให้แก่ลูกค้ากลุ่ม wealth ของธนาคาร")
