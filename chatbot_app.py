@@ -229,8 +229,7 @@ def ask_openai(messages, system_prompt, max_history=10):
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4o",
-            messages=full_messages,
-            temperature=0.0
+            messages=full_messages
         )
         return response.choices[0].message["content"]
     except Exception as e:
