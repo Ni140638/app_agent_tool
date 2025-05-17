@@ -229,8 +229,7 @@ def ask_openai(messages, system_prompt, max_history=10):
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4o",
-            messages=full_messages,
-            temperature=0
+            messages=full_messages
         )
         return response.choices[0].message["content"]
     except Exception as e:
@@ -381,8 +380,4 @@ elif st.session_state["selected_topic"] == "credit":
         "Promotion/Privilage ที่เหมาะกับลูกค้า",
         "Benefit ที่ลูกค้าควรจะได้รับคืออะไร"
     ])
-if st.button("🔁 เคลียร์ session"):
-    st.session_state.clear()
-    st.cache_data.clear()
-    st.rerun()
 
