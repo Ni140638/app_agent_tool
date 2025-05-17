@@ -8,11 +8,6 @@ openai.api_key = st.secrets["OPENAI_API_KEY"]
 # -------------------------------
 
 
-import streamlit as st
-
-import streamlit as st
-import base64
-
 # CSS สำหรับปุ่มแต่ละแบบ
 st.markdown("""
 <style>
@@ -235,7 +230,7 @@ def ask_openai(messages, system_prompt, max_history=10):
         response = openai.ChatCompletion.create(
             model="gpt-4o",
             messages=full_messages,
-            temperature=1
+            temperature=0
         )
         return response.choices[0].message["content"]
     except Exception as e:
