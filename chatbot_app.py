@@ -8,6 +8,11 @@ openai.api_key = st.secrets["OPENAI_API_KEY"]
 # -------------------------------
 
 
+import streamlit as st
+
+import streamlit as st
+import base64
+
 # CSS สำหรับปุ่มแต่ละแบบ
 st.markdown("""
 <style>
@@ -151,7 +156,46 @@ prompt_cc =  f"""ในฐานที่คุณเป็นผู้เชี
 }).reset_index())}  ข้อมูลการรูทบัตรเคดิตในแต่ละประเทศ {(df3.groupby(['country_name']).agg({'total_spending_last6m': 'sum','total_txn_last6m': 'sum'}).reset_index())}  
   3.1 พฤติกรรมการใช้จ่ายของลูกค้าในมุมของยอดเงินที่ใช้จ่ายทั้งหมดใน 6 เดือน ในมุมของร้านค้าและ category/subcategory หรือหมวดหมู่ของร้านค้า
   ซึ่งพฤติกรรมการใช้จ่ายของลูกค้า A ใน 6 เดือนมียอดรวม 2848347.18 ส่วนใหญ่ใช้จ่ายด้าน LIFE INSURANCE ,OTHER SHOPPING,RESTAURANT PHYSICAL ซึ่ง คือจ่ายด้านประกัน ช๊อปปิ้ง และ ร้านอาหารที่กินแบบไม่ใช่ online (physical) แต่ใช้จ่ายน้อสุดในหมวด KID
-  ถ้าดูในระดับร้านค้าจะพบว่า KRUNGTHAI AXA เป็น merchant ที่ใช้จ่ายเยอะที่สุดใน 6 เดือนและ เยอะที่สุดในหมวดหมู่ LIFE INSURANCE  โดยมียอด 1263890.5  ในแง่มุมของความถี่ในการใช้บริการ หรือ transaction ที่ทำจะพบว่าลูกค้าใช้หมวด online และหมวด delivery สั่งอาหารออนไลน์ เยอะที่สุด  ทั้งหมด 72 ครั้ง แต่ ร้านค้าที่มีความถี่เยอะที่สุด 40 ครั้ง คือ GRAB  ใน 6 เดือนลูกค้ามี ticket size ทั้งหมดโดยเฉลี่ย 6781
+  ถ้าดูในระดับร้านค้าจะพบว่า KRUNGTHAI AXA เป็น merchant ที่ใช้จ่ายเยอะที่สุดใน 6 เดือนและ เยอะที่สุดในหมวดหมู่ LIFE INSURANCE  โดยมียอด 1263890.5  ในแง่มุมของความถี่ในการใช้บริการ หรือ transaction ที่ทำจะพบว่าลูกค้าใช้หมวด online  เยอะที่สุด  ทั้งหมด 72 ครั้ง แต่ ร้านค้าที่มีความถี่เยอะที่สุด 34 ครั้ง คือ SHOPEE  ใน 6 เดือนลูกค้ามี ticket size ทั้งหมดโดยเฉลี่ย 6781
+  ขออธิบายเพิ่มเติมในแต่ละ subcategory ร้านค้า หรือหมวดหมู่ร้านค้า
+subcategory :ATTRACTIONคือสถานที่ท่องเที่ยว เช่น สวนสนุก พิพิธภัณฑ์
+subcategory :RESTAURANT DELIVERYคือร้านอาหารแบบเดลิเวอรี่ เช่น GrabFood, foodpanda
+subcategory :ONLINEคือการใช้จ่ายออนไลน์ทั่วไป เช่น ช้อปปิ้งบนแอปหรือเว็บไซต์
+subcategory :RESTAURANT PHYSICAL - TH MASSคือร้านอาหารทั่วไปในไทยแบบออฟไลน์ เช่น ร้านในห้าง ร้านข้างทาง
+subcategory :DIGITALคือบริการดิจิทัล เช่น สตรีมมิ่ง เพลง แอปสมาชิกต่าง ๆ
+subcategory :OTHERคืออื่น ๆ 
+subcategory :SHOPPING GROCERYคือร้านซูเปอร์มาร์เก็ต หรือ ร้านขายของชำ
+subcategory :EXPRESSWAYคือค่าทางด่วน
+subcategory :DESSERT AND DRINKคือของหวานและเครื่องดื่ม เช่น ชานม กาแฟ
+subcategory :FASHION - INTERNATIONALคือเสื้อผ้าแฟชั่นแบรนด์ต่างประเทศ
+subcategory :GADGET AND TELECOMคืออุปกรณ์ไอที มือถือ อินเทอร์เน็ต
+subcategory :OTHER SHOPPINGคือหมวดการช้อปปิ้งอื่น ๆ ที่ไม่อยู่ในหมวดหลัก
+subcategory :TRAVEL BOOKING PLATFORM & TRAVEL AGENTคือจองทัวร์/ตั๋วผ่านแอปหรือเอเจนซี่ท่องเที่ยว
+subcategory :LIFE INSURANCEคือประกันชีวิต
+subcategory :GASคือปั๋มน้ำมันรถหรือแก๊ส
+subcategory :SPORTS STOREคือร้านขายอุปกรณ์กีฬา
+subcategory :FASHION - TH MASSคือเสื้อผ้าแบรนด์ไทยทั่วไป เช่น AIIZ, G2000
+subcategory :RESTAURANT PHYSICAL - INTERNATIONALคือร้านอาหารต่างประเทศแบบออฟไลน์
+subcategory :NON-LIFE INSURANCEคือประกันที่ไม่ใช่ชีวิต เช่น ประกันรถ บ้าน สุขภาพ
+subcategory :CAR RENTALคือค่าเช่ารถยนต์
+subcategory :BOOK AND STATIONERYคือร้านหนังสือและเครื่องเขียน
+subcategory :HOMEคือร้านที่เกี่ยวกับบ้าน เช่น อุปกรณ์สร้างบ้าน
+subcategory :RESTAURANT PHYSICAL - TH LUXURYคือร้านอาหารหรูในไทย แบบออฟไลน์ เช่น Fine Dining
+subcategory :MALL - TH LUXURYคือห้างหรูในไทย เช่น Siam Paragon
+subcategory :HOTEL - TH LUXURYคือโรงแรมหรูในไทย 
+subcategory :HOTEL - TH MASSคือโรงแรมทั่วไปในไทย
+subcategory :HEALTH FITNESSคือร้านค้าที่เกี่ยวกับสุขภาพ เช่น  ฟิตเนส โยคะ คลาสสุขภาพ คลินิก
+subcategory :HOME FURNITUREคือเฟอร์นิเจอร์ในบ้าน เช่น โต๊ะ เตียง โซฟา
+subcategory :MALL - INTERNATIONALคือห้างแบรนด์ต่างประเทศ 
+subcategory :KIDคือของใช้เด็ก ของเล่นเด็ก
+subcategory :EDUCATIONคือค่าเล่าเรียน คอร์สเรียน หนังสือเรียน
+subcategory :TRANSPORTATIONคือการเดินทาง เช่น รถไฟฟ้า รถสาธารณะ
+subcategory :LEASING AND DEALERคือค่าผ่อนรถ หรือจากดีลเลอร์รถยนต์
+
+
+
+***ชื่อร้านค้าต้องใช้ merchant  จากตาราง {df} เท่านั้น  ห้ามแต่งชื่อใหม่ เช่น ถ้าถามว่าลูกค้าใช้จ่ายในหมวดการศึกษา คือ BISB LIMITED จำนวนเงิน 80000 บาท
+
   3.2 พฤติกรรมการใช้ร้านค้าในมุมของหมวดหมู่ร้านค้า preference หรือลักษณะของร้านค้าซึ่งจะแบ่งออกเป็น 3 ลักษณ์ คือ Financial preference(ร้านที่เกี่ยวกับด้านการเงิน),Luxury preference(ร้านอาหารที่ค่อนข้างหรู มีราคาแพง) และ General preference(ร้านค้าทั่วไป)
   จากข้อมูลลูกค้า A ถ้าดูจากหมวดหมู่ร้านค้า หมวดหมู่ด้านการเงิน(Financial preference) ลูกค้าใช้จ่าย ใน LIFE INSURANCE มากที่สุด ใน 6 เดือนเป็นยอด 1562879.73 โดย merchant ที่จ่ายสูงสุดคือ KRUNGTHAI AXA ยอด 1263890.5 ในหมด Financial preference ลูกค้าใช้จ่ายถี่ หรือ transaction มากในmerchant  FWD LIFE ทั้งหมด 4 ครั้ง
   ถ้าในหมวดหมู่ร้านค้า Luxury (Luxury preference  ) จะพบว่าใช้จ่ายในหมวด HOTEL  เยอะที่สุดซึ่งคือร้าน  KIRIMAYA RESORT & SPA
@@ -173,11 +217,12 @@ prompt_cc =  f"""ในฐานที่คุณเป็นผู้เชี
    ในการแนะนำ promotion บัตรเคดิต จากพฤติกรรมการใช้จ่ายของลูกค้า ต้อง offer ดั่งนี้"""+o+"""
 ***จากข้อมูลทั้งหมดพยายามตอบแบบคิดวิเคราะห์เชื่อมโยงอย่างเป็นเหตุเป็นผลจากข้อมูลทั้งหมดทั้งข้อมูลการใช้บัตร การแลก point ข้อมูล persona ลูกค้า ข้อมูลการ offer สิทธิประโยชน์ ข้อมูลบัตร ข้อมูลการแลก point ในอดีต และต้องสะกดคำให้ถูกต้อง ไม่ต้องบอกว่ามากจาก json หรือ dataframe
 ***ห้ามโชว์การคำนวณเด็ดขาดในคำตอบ
-***พยายามตอบโดยให้เหตุผลจากข้อมูล และเชื่อมโยงข้อมูล รวมถึงอ้างอิงจากข้อมูลเท่านั้น
+***พยายามตอบโดยให้เหตุผลจากข้อมูล และเชื่อมโยงข้อมูล รวมถึงอ้างอิงจากข้อมูลที่ให้ไปเท่านั้น
 ****ห้ามสะกดคำผิด หรือ ห้ามตอบภาษาแปลกๆ เช่น จีน หรือ ญีปุ่น
 ****อย่าสะกดภาษาไทยทับซับภาษอังกฤษ
 ****ตอบในโทนของผู้เชี่ยวชาญด้านการแนะนำ ดูน่าเชื่อถือ
 ****ข้อมูลนี้คือลูกค้าไปใช้บริการไม่ใช่ให้บริการ"""
+
 
  
 
@@ -189,7 +234,8 @@ def ask_openai(messages, system_prompt, max_history=10):
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4o",
-            messages=full_messages
+            messages=full_messages,
+            temperature=1
         )
         return response.choices[0].message["content"]
     except Exception as e:
