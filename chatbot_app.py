@@ -386,3 +386,4 @@ elif st.session_state["selected_topic"] == "credit":
         "Promotion/Privilage ที่เหมาะกับลูกค้า",
         "Benefit ที่ลูกค้าควรจะได้รับคืออะไร"
     ])
+st.cache_data.clear()
