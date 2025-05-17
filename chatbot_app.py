@@ -54,6 +54,9 @@ with open("genai-mf-prompt-for-first-draft.txt", "r", encoding="utf-8") as f:
     prompt_mf = f.read()
 with open("gen-ai-motor-first-draft.txt", "r", encoding="utf-8") as f:
     prompt_motor = f.read()
+with open("genai-cc-prompt-for-first-draft.txt", "r", encoding="utf-8") as f:
+    prompt_cc = f.read()
+    
 import pandas as pd
 df=pd.read_csv('df.csv')
 df2=pd.read_csv('df2.csv') 
@@ -135,7 +138,7 @@ from datetime import datetime
 now = datetime.now()
 now_string = now.strftime("%Y-%m-%d")  # Format: YYYY-MM-DD HH:MM:SS
 # Create the query string
-prompt_cc =  f"""ในฐานที่คุณเป็นผู้เชี่ยวชาญด้านการใช้บัตรเคดิตของ ttb และเป็นพนักงานทีม creditcard ของ ttb ดั่งนี้
+prompt_cc_raw =  f"""ในฐานที่คุณเป็นผู้เชี่ยวชาญด้านการใช้บัตรเคดิตของ ttb และเป็นพนักงานทีม creditcard ของ ttb ดั่งนี้
 1 ข้อมูล Persona ของลูกค้า ให้ใช้ข้อมูลจากข้อมูล  JSON {cust} ซึ่งลูกค้าอายุ 62 เป็น Young Wealth และอยู่ที่กรุงเทพ เป็นผู้ชาย    
   ทำอาชีพพนักงานเงินเดือน(Professional) ประมาณ 300,000 บาท
 2 ถ้าโดนถามเรื่อง ข้อมูลบัตรเคดิต ให้ใช้ข้อมูลจากข้อมูล  JSON {card_info}  โดย prod_credit_card คือ ประเภททีบัตรที่ลูกค้าถือ และ  
