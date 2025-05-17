@@ -381,4 +381,10 @@ elif st.session_state["selected_topic"] == "credit":
         "Benefit ที่ลูกค้าควรจะได้รับคืออะไร"
     ])
 
+import tiktoken
+enc = tiktoken.encoding_for_model("gpt-4o")
+token_count = len(enc.encode(prompt_cc))
+st.write("🔢 Token count:", token_count)
+
+
 
